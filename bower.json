@@ -1,0 +1,17 @@
+{
+  "name": "lobbie-game",
+  "version": "0.0.0",
+  "keywords": [
+    "seed",
+    "polymer",
+    "web-components"
+  ],
+  "main": "lobbie-game.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^0.5.1",
+    "firebase-element": "polymer/firebase-element#~0.5.2"
+  },
+  "devDependencies": {
+    "web-component-tester": "Polymer/web-component-tester#^2.0.0"
+  }
+}

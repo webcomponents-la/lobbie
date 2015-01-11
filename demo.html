@@ -1,0 +1,131 @@
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <title>lobbie-game Demo</title>
+
+  <script src="../webcomponentsjs/webcomponents.js"></script>
+  <link rel="import" href="lobbie.html">
+
+  <link rel="import" href="../polymer/polymer.html">
+  <polymer-element name="lobbie-demo">
+    <template>
+      <style>
+        :host {
+          font-family: sans-serif;
+        }
+
+        aside {
+          background: #eee;
+          padding: 15px
+        }
+
+        .user-list {
+          list-style: none;
+          padding: 0;
+          background: #eee;
+        }
+
+        .user-list li {
+          padding: 5px 8px;
+          border-radius: 2px;
+          color: white;
+        }
+
+        aside > * {
+          display: block;
+          margin: 0 0 15px;
+        }
+
+        #grid {
+          overflow: hidden;
+        }
+
+        table {
+          width: 900px;
+          height: 900px;
+          border-collapse: collapse;
+        }
+
+        td {
+          width: 30px;
+          height: 30px;
+        }
+      </style>
+
+      <lobbie-room id="room" base="https://lobbie.firebaseio.com" code="{{code}}" users="{{users}}" userIds="{{userIds}}" userData="{{userData}}" user="{{user}}"></lobbie-room>
+
+      <section fit horizontal layout>
+        <aside>
+          <input value="{{userData.name}}" placeholder="Name">
+
+          <select value="{{userData.color}}">
+            <option>Choose a Color</option>
+            <option value="#F44336">Red</option>
+            <option value="#9C27B0">Purple</option>
+            <option value="#2196F3">Blue</option>
+            <option value="#4CAF50">Green</option>
+            <option value="#795548">Brown</option>
+          </select>
+
+          <ul class="user-list">
+            <template repeat="{{uid in userIds}}">
+              <template if="{{users[uid].status == 'online'}}">
+                <li class="{{users[uid].status}}" style="background-color: {{users[uid].color || '#666'}}">{{users[uid].name || 'Anonymous'}}</li>
+              </template>
+            </template>
+          </ul>
+        </aside>
+        <section id="grid" flex>
+          <table>
+            <template repeat="{{i in numbers}}">
+              <tr>
+                <firebase-element location="{{$.room.dataLocation}}/row{{i}}" on-data-change="{{updateColor}}"></firebase-element>
+                <template repeat="{{j in numbers}}">
+                  <td class="col{{j}} row{{i}}" x="{{j}}" y="{{i}}" on-tap="{{paint}}"></td>
+                </template>
+              </tr>
+            </template>
+          </table>
+        </section>
+      </section>
+    </template>
+    <script>
+      Polymer({
+        created: function() {
+          this.numbers = [];
+          for(var i = 0; i < 30; i++) {
+            this.numbers.push(i);
+          };
+        },
+        onlineOnly: function(users) {
+          if (!users){ return []; }
+
+          var out = [];
+          for (var uid in users) {
+            console.log(users[uid]);
+            if (users[uid].status === 'online'){ out.push(users[uid]) }
+          }
+          console.log(out);
+          return out;
+        },
+        updateColor: function(e) {
+          var el = e.target;
+          if (el.dataReady) {
+            for(var key in el.data) {
+              this.$.grid.querySelector('.' + key + '.' + el.ref.key()).style.backgroundColor = el.data[key];
+            }
+          }
+        },
+        paint: function(e) {
+          var el = e.currentTarget;
+          new Firebase(this.$.room.dataLocation + '/row' + el.getAttribute('y') + '/col' + el.getAttribute('x')).set(this.userData.color || '#000000');
+        }
+      });
+    </script>
+  </polymer-element>
+</head>
+<body unresolved fullbleed>
+  <lobbie-demo fit></lobbie-demo>
+</body>
+</html>

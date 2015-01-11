@@ -1,0 +1,74 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../firebase-element/firebase-element.html">
+<link rel="import" href="../firebase-element/firebase-login.html">
+
+<!--
+
+Top-level room element for Lobbie. This element serves as a central point of
+coordination for your application and manages things such as presence and
+authentication automatically.
+
+@class lobbie-room
+
+-->
+<polymer-element name="lobbie-room" attributes="base code root prefs user userData users userIds dataLocation data">
+  <template>
+    <firebase-element id="userDataRef" location="{{base}}{{root}}/rooms/{{code}}/users/{{user.uid}}" data="{{userData}}"></firebase-element>
+    <firebase-element id="usersRef"    location="{{base}}{{root}}/rooms/{{code}}/users" data="{{users}}" keys="{{userIds}}"></firebase-element>
+    <firebase-element id="prefsRef"    location="{{base}}{{root}}/prefs/{{user.uid}}" data="{{prefs}}"></firebase-element>
+    <firebase-element id="dataRef"     location="{{dataLocation}}" data="{{data}}"></firebase-element>
+
+    <firebase-login location="{{base}}" user="{{user}}" provider="anonymous" autoLogin></firebase-login>
+  </template>
+  <script>
+    (function() {
+      Polymer({
+        /**
+         * The Firebase origin for this app, e.g. `https://my-app.firebaseio.com`
+         *
+         * @attribute base
+         * @type String
+         */
+
+        /**
+         * Unique room code, defaults to `__pub` for a general public room.
+         *
+         * @attribute code
+         * @type String
+         */
+        code: '__pub',
+        /**
+         * A prefix that will be appended to the data structures used by Lobbie.
+         * Use this if your Lobbie data is shared on a Firebase with other
+         * data. Must include a leading slash (e.g. `/lobbie`).
+         * @attribute root
+         * @type String
+         */
+        root: '',
+
+        observe: {
+          '$.userDataRef.dataReady': 'userDataReady',
+          'base root code': 'updateLocations'
+        },
+
+        userDataReady: function() {
+          if (this.user) {
+            if (!this.userData) {
+              this.userData = {
+                joinedAt: Firebase.ServerValue.TIMESTAMP
+              }
+            }
+
+            this.userData.status = 'online';
+            this.userData.statusChangedAt = Firebase.ServerValue.TIMESTAMP;
+            this.$.userDataRef.ref.onDisconnect().update({status: 'offline', statusChangedAt: Firebase.ServerValue.TIMESTAMP});
+          }
+        },
+
+        updateLocations: function() {
+          this.dataLocation = this.base + this.root + "/rooms/" + this.code + "/data";
+        }
+      });
+    })();
+  </script>
+</polymer-element>
